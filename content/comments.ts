@@ -21,15 +21,10 @@ export interface GiscusConfig {
 }
 
 export const giscus: GiscusConfig = {
-  // ——— 加内容示例(去掉注释并填入 giscus.app 生成的真实值)———
-  // repo: 'IssacBytes/site-comments',
-  // repoId: 'R_kgxxxxxxxxxxxxxx',
-  // category: 'Announcements',
-  // categoryId: 'DIC_kwxxxxxxxxxxxxxx',
-  repo: '',
-  repoId: '',
-  category: '',
-  categoryId: '',
+  repo: 'IssacBytes/site_issacbytes',
+  repoId: 'R_kgDOTfR3OQ',
+  category: 'Announcements',
+  categoryId: 'DIC_kwDOTfR3Oc4DBsxi',
   mapping: 'pathname',
   reactionsEnabled: true,
   lang: 'zh-CN',
