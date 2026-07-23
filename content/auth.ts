@@ -15,8 +15,8 @@ export interface SupabaseAuthConfig {
 }
 
 export const supabaseAuth: SupabaseAuthConfig = {
-  url: '',
-  anonKey: '',
+  url: 'https://kfcgjlfljgjpploroirb.supabase.co',
+  anonKey: 'sb_publishable_6S5elrzAqD-wuK3M6dzADQ_O1e0gjAx',
 }
 
 /** 有没有配好 —— 决定登录入口与「我的」页个人视图是否显示 */
