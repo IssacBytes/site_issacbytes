@@ -3,6 +3,7 @@ import { site, prompt } from '@/site.config'
 import { about, hasNeofetch, hasBio, hasTimeline } from '@/content/about'
 import { hasGiscus, giscusDiscussionsUrl } from '@/content/comments'
 import { Shell } from '@/components/Shell'
+import { AuthPanelLazy } from '@/components/AuthPanelLazy'
 
 export const metadata: Metadata = {
   title: '我的',
@@ -68,6 +69,9 @@ export default function AboutPage() {
             </div>
           </div>
         </section>
+
+        {/* 登录个人视图 —— auth 未配置(content/auth.ts 为空)时整块隐藏,组件也不会被加载 */}
+        <AuthPanelLazy />
 
         {/* 访客互动 —— giscus 未配置时整块隐藏,不放任何点了没反应的「登录」按钮 */}
         {hasGiscus && (
