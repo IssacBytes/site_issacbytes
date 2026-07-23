@@ -104,6 +104,32 @@ for (const mode of ['day', 'night']) {
   }
 }
 
+// input::placeholder 单独断言（Codex 二审整改项 3 遗留②：非阻断待办清零）：
+// 占位提示文本用 ink α.75 与页面真实背景色叠加后的「有效颜色」计算对比度
+// （不是裸 ink 色，α 混合后颜色会变浅/变深，必须按混合结果算，否则会虚高判绿）。
+// 搜索框（CommandPalette / WritingList）实际渲染在 --panel 背景上，day 另加 --bg 兜底核验。
+function blendOverBg(fgHex, alpha, bgHex) {
+  const fg = hexToRgb(fgHex)
+  const bg = hexToRgb(bgHex)
+  return fg.map((c, i) => Math.round(c * alpha + bg[i] * (1 - alpha)))
+}
+function contrastRatioRgb(rgbA, rgbB) {
+  const l1 = relLuminance(rgbA)
+  const l2 = relLuminance(rgbB)
+  const [hi, lo] = l1 >= l2 ? [l1, l2] : [l2, l1]
+  return (hi + 0.05) / (lo + 0.05)
+}
+const PLACEHOLDER_ALPHA = 0.75
+for (const mode of ['day', 'night']) {
+  const { bg, panel, ink } = THEME_COLORS[mode]
+  const bgTargets = mode === 'day' ? [['bg', bg], ['panel', panel]] : [['bg', bg], ['panel', panel]]
+  for (const [bgLabel, bgHex] of bgTargets) {
+    const blended = blendOverBg(ink, PLACEHOLDER_ALPHA, bgHex)
+    const ratio = contrastRatioRgb(blended, hexToRgb(bgHex))
+    record(`对比度 placeholder ${mode} on ${bgLabel} ≥4.5:1（ink α.75 混合实测）`, ratio >= 4.5, `实测 ${ratio.toFixed(2)}:1`)
+  }
+}
+
 // 1. 类型检查
 run('tsc --noEmit', 'npx', ['tsc', '--noEmit'])
 

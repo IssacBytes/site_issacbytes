@@ -57,8 +57,9 @@ button {
 }
 
 input::placeholder {
-  /* alpha-ok: 占位提示文本,输入后即消失、非持久内容,WCAG 1.4.3 通常不强制要求 */
-  color: rgb(var(--inkrgb, 233 226 208) / 0.3);
+  /* 占位提示文本承载「如何使用输入框」的信息，按 WCAG 1.4.3 与正文同等对待：
+     ink α.75，对 panel/bg 在日夜两主题下实测均 ≥4.5:1（详见 scripts/verify.mjs 对比度断言）。 */
+  color: rgb(var(--inkrgb, 233 226 208) / 0.75);
 }
 
 /* —— 键盘可见焦点(WCAG 2.4.7) —— */
