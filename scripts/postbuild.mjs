@@ -18,6 +18,9 @@ import path from 'node:path'
 const siteRoot = path.resolve(fileURLToPath(new URL('.', import.meta.url)), '..')
 const outDir = path.join(siteRoot, 'out')
 
+// __empty__ 为保留字:真实文章 / 项目不得使用此 slug,否则会被下面当作
+// 哨兵目录静默删除。该约束由 scripts/check-reserved-slugs.mjs 在 prebuild
+// 阶段提前校验并阻断构建,这里仅删除确认无害的哨兵目录本身。
 const sentinelDirs = [
   path.join(outDir, 'writing', '__empty__'),
   path.join(outDir, 'projects', '__empty__'),
