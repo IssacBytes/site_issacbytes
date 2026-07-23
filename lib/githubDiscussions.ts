@@ -149,17 +149,21 @@ async function graphql(token: string, owner: string, name: string, after: string
     throw new GithubAuthError(`GitHub 判定当前登录令牌无效或已过期(状态码 401)`)
   }
 
+  // 限流信号来自响应头,与状态码无关(GraphQL 触发限流时常见的是 200 + errors[],
+  // 而非 403)。先统一取一次,供下面 403 分支与 errors[] 分支共用,避免遗漏。
+  const remaining = res.headers.get('x-ratelimit-remaining')
+  const retryAfter = res.headers.get('retry-after')
+  const looksRateLimitedByHeaders = remaining === '0' || retryAfter !== null
+
   // 403:先看是不是限流(有明确限流信号才归为限流),否则才归为权限不足。
   if (res.status === 403) {
-    const remaining = res.headers.get('x-ratelimit-remaining')
-    const retryAfter = res.headers.get('retry-after')
     let bodyText = ''
     try {
       bodyText = await res.text()
     } catch {
       /* 读取失败就按空文本处理,不影响限流信号判断 */
     }
-    const looksRateLimited = remaining === '0' || retryAfter !== null || RATE_LIMIT_RE.test(bodyText)
+    const looksRateLimited = looksRateLimitedByHeaders || RATE_LIMIT_RE.test(bodyText)
     if (looksRateLimited) {
       throw new GithubRateLimitError('GitHub 接口暂时限流,稍后再试(状态码 403)')
     }
@@ -172,9 +176,17 @@ async function graphql(token: string, owner: string, name: string, after: string
 
   const json = (await res.json()) as GqlResponse
   if (json.errors?.length) {
-    const rateLimited = json.errors.find((e) => RATE_LIMIT_RE.test(e.message || ''))
+    // 混合信号场景:响应头已表明限流,即便 errors[] 里同时混有权限不足的信息,
+    // 也优先按限流处理(限流是临时状态,「权限不足」的 involves: 兜底链接此时
+    // 不该出现——那会误导用户去做无关的权限排查)。
+    const rateLimited =
+      looksRateLimitedByHeaders ||
+      json.errors.some((e) => e.type === 'RATE_LIMITED' || RATE_LIMIT_RE.test(e.message || ''))
     if (rateLimited) {
-      throw new GithubRateLimitError(rateLimited.message || 'GitHub 接口暂时限流,稍后再试')
+      const rateLimitedEntry = json.errors.find(
+        (e) => e.type === 'RATE_LIMITED' || RATE_LIMIT_RE.test(e.message || '')
+      )
+      throw new GithubRateLimitError(rateLimitedEntry?.message || 'GitHub 接口暂时限流,稍后再试')
     }
     const permissionIssue = json.errors.find(
       (e) => (e.type && PERMISSION_ERROR_TYPES.has(e.type)) || PERMISSION_RE.test(e.message || '')
